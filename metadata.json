@@ -1,0 +1,8 @@
+{
+  "name": "Udaan X",
+  "description": "A premium, dark-themed AI-powered college learning platform featuring study hubs, custom learning roadmaps, peer communication boards, and a comprehensive AI learning assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
