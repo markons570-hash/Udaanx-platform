@@ -46,10 +46,15 @@ export default function DashboardView({
     setNewTaskTitle("");
   };
 
+  // Dynamically calculate progress metrics based on real subjects data
+  const totalCompleted = subjects.reduce((sum, s) => sum + s.completedLessons, 0);
+  const totalLessons = subjects.reduce((sum, s) => sum + s.totalLessons, 0);
+  const overallProgressPercent = totalLessons > 0 ? Math.round((totalCompleted / totalLessons) * 100) : 0;
+
   // Circular progress SVG variables
   const radius = 42;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (75 / 100) * circumference;
+  const strokeDashoffset = circumference - (overallProgressPercent / 100) * circumference;
 
   return (
     <div id="dashboard-hub" className="space-y-6 text-left pb-12">
@@ -227,8 +232,10 @@ export default function DashboardView({
                 />
               </svg>
               <div className="absolute text-center">
-                <div className="text-2xl font-black text-white">75%</div>
-                <div className="text-[8px] font-black text-cyan-400 uppercase tracking-widest">Great!</div>
+                <div className="text-2xl font-black text-white">{overallProgressPercent}%</div>
+                <div className="text-[8px] font-black text-cyan-400 uppercase tracking-widest">
+                  {overallProgressPercent >= 75 ? "Excellent" : overallProgressPercent >= 40 ? "Steady" : overallProgressPercent > 0 ? "Started" : "Beginner"}
+                </div>
               </div>
             </div>
           </div>
@@ -241,16 +248,16 @@ export default function DashboardView({
           <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Lessons Completed</span>
           
           <div className="my-auto py-4">
-            <span className="text-5xl font-black text-white tracking-tight">124</span>
+            <span className="text-5xl font-black text-white tracking-tight">{totalCompleted}</span>
             <div className="text-xs font-bold text-emerald-400 mt-2 flex items-center space-x-1">
-              <span>+10 this month</span>
-              <span className="text-[10px] text-slate-500 font-normal">(8% increase)</span>
+              <span>{overallProgressPercent > 0 ? `+${totalCompleted} total units` : "Start lessons below"}</span>
+              <span className="text-[10px] text-slate-500 font-normal">({totalLessons - totalCompleted} remaining)</span>
             </div>
           </div>
 
           {/* Custom SVG line bar decoration */}
           <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-            <div className="h-full bg-emerald-500 rounded-full" style={{ width: "70%" }} />
+            <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${overallProgressPercent}%` }} />
           </div>
         </div>
 

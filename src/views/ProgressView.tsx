@@ -12,14 +12,17 @@ interface ProgressViewProps {
 }
 
 export default function ProgressView({ user, subjects }: ProgressViewProps) {
-  // Weekly performance coordinate metrics (Week 1 to Week 5)
-  // Values representing cumulative XP or complete lessons count: 20%, 42%, 58%, 65%, 75%
+  const totalCompleted = subjects.reduce((sum, s) => sum + s.completedLessons, 0);
+  const totalLessons = subjects.reduce((sum, s) => sum + s.totalLessons, 0);
+  const overallProgressPercent = totalLessons > 0 ? Math.round((totalCompleted / totalLessons) * 100) : 0;
+
+  // Weekly performance coordinate metrics (Week 1 to Week 5) dynamically calculated
   const chartData = [
-    { label: "W1", percent: 20 },
-    { label: "W2", percent: 42 },
-    { label: "W3", percent: 58 },
-    { label: "W4", percent: 65 },
-    { label: "W5", percent: 75 }
+    { label: "W1", percent: Math.round(overallProgressPercent * 0.2) },
+    { label: "W2", percent: Math.round(overallProgressPercent * 0.45) },
+    { label: "W3", percent: Math.round(overallProgressPercent * 0.65) },
+    { label: "W4", percent: Math.round(overallProgressPercent * 0.8) },
+    { label: "W5", percent: overallProgressPercent }
   ];
 
   // SVG Area Coordinates mapping system
@@ -48,28 +51,28 @@ export default function ProgressView({ user, subjects }: ProgressViewProps) {
   // Create SVG path string for the gradient fill area
   const fillPath = `${linePath} L ${coords[coords.length - 1].x} ${svgHeight - paddingY} L ${coords[0].x} ${svgHeight - paddingY} Z`;
 
-  // Badges accomplishments mock definitions
+  // Badges accomplishments definitions dynamically verified
   const achievements = [
     {
       id: "ach1",
       title: "Syllabus Crusher",
-      desc: "Completed over 100 deep syllabus lessons",
-      unlockedAt: "June 2, 2026",
-      isUnlocked: true,
+      desc: "Complete over 50 deep syllabus lessons",
+      unlockedAt: totalCompleted >= 50 ? "June 2, 2026" : "Pending",
+      isUnlocked: totalCompleted >= 50,
       reward: "+1000 XP"
     },
     {
       id: "ach2",
       title: "Double-Digit Fire",
-      desc: "Sustained a study streak of 12 days",
-      unlockedAt: "June 8, 2026",
-      isUnlocked: true,
+      desc: "Shatter a study streak of 10+ days",
+      unlockedAt: user.studyStreak >= 10 ? "June 8, 2026" : "Pending",
+      isUnlocked: user.studyStreak >= 10,
       reward: "+500 XP"
     },
     {
       id: "ach3",
       title: "AI Zen Master",
-      desc: "Triggered 50 AI Assistant queries",
+      desc: "Trigger 50 AI Assistant queries",
       unlockedAt: "Pending",
       isUnlocked: false,
       reward: "+250 XP"
@@ -77,7 +80,7 @@ export default function ProgressView({ user, subjects }: ProgressViewProps) {
     {
       id: "ach4",
       title: "Campus Pioneer",
-      desc: "Published 5 forum guides",
+      desc: "Publish 5 forum guides",
       unlockedAt: "Pending",
       isUnlocked: false,
       reward: "+300 XP"
@@ -100,8 +103,8 @@ export default function ProgressView({ user, subjects }: ProgressViewProps) {
         <div className="rounded-2xl glass-panel p-5 space-y-3 shadow-lg animate-fadeIn">
           <CheckCircle className="w-5 h-5 text-emerald-400" />
           <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Lessons Completed</div>
-          <div className="text-3xl font-black text-white">{124} units</div>
-          <div className="text-[11px] text-slate-400">+10 completed this month</div>
+          <div className="text-3xl font-black text-white">{totalCompleted} units</div>
+          <div className="text-[11px] text-slate-400">Total completed units</div>
         </div>
 
         <div className="rounded-2xl glass-panel p-5 space-y-3 shadow-lg animate-fadeIn">
@@ -125,7 +128,7 @@ export default function ProgressView({ user, subjects }: ProgressViewProps) {
           </div>
 
           <div className="text-right">
-            <span className="text-2xl font-black text-cyan-400">75%</span>
+            <span className="text-2xl font-black text-cyan-400">{overallProgressPercent}%</span>
             <span className="text-[10px] font-bold text-slate-500 block">CURRENT CUMULATIVE</span>
           </div>
         </div>

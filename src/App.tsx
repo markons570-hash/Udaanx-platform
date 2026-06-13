@@ -11,6 +11,7 @@ import {
 import { UserProfile, SubjectProgress, Task, CourseModule, Milestone, DiscussionThread } from "./types";
 import LandingView from "./views/LandingView";
 import LoginView from "./views/LoginView";
+import CustomOnboardingView from "./views/OnboardingView";
 import DashboardView from "./views/DashboardView";
 import AssistantView from "./views/AssistantView";
 import StudyView from "./views/StudyView";
@@ -23,6 +24,8 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("dashboard"); // main tabs
   const [showLoginPage, setShowLoginPage] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingEmail, setOnboardingEmail] = useState("");
 
   // Assistant cross-linking parameters
   const [assistantPrompt, setAssistantPrompt] = useState("");
@@ -136,7 +139,7 @@ export default function App() {
   ]);
 
   // Roadmaps steps
-  const [milestones] = useState<Milestone[]>([
+  const [milestones, setMilestones] = useState<Milestone[]>([
     {
       id: "ms1",
       stepNumber: 1,
@@ -335,10 +338,35 @@ export default function App() {
 
   // Routing conditional rendering
   if (!isLoggedIn) {
+    if (showOnboarding) {
+      return (
+        <CustomOnboardingView
+          email={onboardingEmail}
+          onCompleteOnboarding={(setup) => {
+            setUser(setup.user);
+            setSubjects(setup.subjects);
+            setMilestones(setup.milestones);
+            setTasks(setup.tasks);
+            setIsLoggedIn(true);
+            setShowOnboarding(false);
+            setShowLoginPage(false);
+            setActiveTab("dashboard");
+          }}
+          onBackToLogin={() => {
+            setShowOnboarding(false);
+            setShowLoginPage(true);
+          }}
+        />
+      );
+    }
     if (showLoginPage) {
       return (
         <LoginView 
           onLoginSuccess={handleLoginSuccess} 
+          onSignUpNewUser={(email) => {
+            setOnboardingEmail(email);
+            setShowOnboarding(true);
+          }}
           onBack={() => setShowLoginPage(false)} 
         />
       );
@@ -599,28 +627,119 @@ export default function App() {
                 <p className="text-xs text-slate-400">Confirm your secure configuration parameters below. Secrets are injected at runtime.</p>
               </div>
 
-              <div className="bg-[#0a0f1d]/20 border border-white/5 p-5 rounded-2xl max-w-xl space-y-4">
-                <div className="text-xs font-extrabold text-cyan-400 uppercase tracking-widest">Environment Variables</div>
-                
-                <div className="space-y-3.5">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold text-slate-500 block uppercase">Gemini API Connection Code</label>
-                    <div className="p-3.5 bg-slate-950/80 rounded-xl border border-white/5 text-xs font-mono text-slate-400 flex justify-between items-center">
-                      <span>GEMINI_API_KEY = "********"</span>
-                      <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">AUTO INJECTED</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-[#0a0f1d]/20 border border-white/5 p-5 rounded-2xl space-y-4">
+                  <div className="text-xs font-extrabold text-cyan-400 uppercase tracking-widest">Environment Variables</div>
+                  
+                  <div className="space-y-3.5">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-extrabold text-slate-500 block uppercase">Gemini API Connection Code</label>
+                      <div className="p-3.5 bg-slate-950/80 rounded-xl border border-white/5 text-xs font-mono text-slate-400 flex justify-between items-center">
+                        <span>GEMINI_API_KEY = "********"</span>
+                        <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">AUTO INJECTED</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-extrabold text-slate-500 block uppercase font-mono">App URL Anchor</label>
+                      <div className="p-3.5 bg-slate-950/80 rounded-xl border border-white/5 text-xs font-mono text-slate-400">
+                        APP_URL = "https://ais-dev..."
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold text-slate-500 block uppercase font-mono">App URL Anchor</label>
-                    <div className="p-3.5 bg-slate-950/80 rounded-xl border border-white/5 text-xs font-mono text-slate-400">
-                      APP_URL = "https://ais-dev..."
-                    </div>
+                  <div className="p-3 text-[11px] text-slate-500 leading-normal bg-slate-950/40 rounded-xl border border-white/5">
+                    🔒 Highly encoded sessions. To supply a new private token, visit the AI Studio Secrets panel in the sidebar menu. Do not write keys in plain text.
                   </div>
                 </div>
 
-                <div className="p-3 text-[11px] text-slate-500 leading-normal bg-slate-950/40 rounded-xl border border-white/5">
-                  🔒 Highly encoded sessions. To supply a new private token, visit the AI Studio Secrets panel in the sidebar menu. Do not write keys in plain text.
+                <div className="bg-[#0a0f1d]/20 border border-white/5 p-5 rounded-2xl space-y-4 flex flex-col justify-between">
+                  <div className="space-y-4">
+                    <div className="text-xs font-extrabold text-rose-500 uppercase tracking-widest">Danger Zone & RESET</div>
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold text-white">Reset Course Curriculum</h4>
+                      <p className="text-[11px] text-slate-400 leading-normal">
+                        Want to start clean at **Level 1** with 0 XP completed units, or update your specialized subject stream? You can re-run the interactive onboarding wizard anytime.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 border-t border-white/5 pt-4">
+                    <button
+                      onClick={() => {
+                        setOnboardingEmail(user.email);
+                        setIsLoggedIn(false);
+                        setShowOnboarding(true);
+                      }}
+                      className="w-full text-center py-2.5 bg-slate-950 hover:bg-slate-900 border border-rose-500/30 hover:border-rose-500 text-rose-400 hover:text-rose-300 rounded-xl text-xs font-black transition-all cursor-pointer"
+                    >
+                      Re-run Onboarding Setup Wizard
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm("Are you sure you want to instantly hard reset all progress to zero (Level 1, 0 XP)?")) {
+                          setUser(prev => ({
+                            ...prev,
+                            level: 1,
+                            xpPoints: 0,
+                            studyStreak: 1,
+                            tasksDone: 0,
+                            tasksTotal: 3
+                          }));
+                          setSubjects([
+                            { id: "sub1", name: "Data Structures", completedLessons: 0, totalLessons: 24, percentage: 0 },
+                            { id: "sub2", name: "Operating Systems", completedLessons: 0, totalLessons: 20, percentage: 0 },
+                            { id: "sub3", name: "DBMS", completedLessons: 0, totalLessons: 20, percentage: 0 },
+                            { id: "sub4", name: "Computer Networks", completedLessons: 0, totalLessons: 15, percentage: 0 },
+                            { id: "sub5", name: "Algorithms", completedLessons: 0, totalLessons: 20, percentage: 0 }
+                          ]);
+                          setMilestones([
+                            {
+                              id: "ms1",
+                              stepNumber: 1,
+                              title: "Fundamentals & Big O Analysis",
+                              description: "Acquire basic syntax skills, variable structures, sorting, array memory bounds, and logarithmic complexities.",
+                              status: "In Progress",
+                              skillsLearned: ["HTML/CSS", "Linear search", "Big-O Analysis", "Git Hooks"]
+                            },
+                            {
+                              id: "ms2",
+                              stepNumber: 2,
+                              title: "Frontend Engineering Core",
+                              description: "Explore atomic DOM hierarchies, React states hooks, flexbox grid layouts, and API fetching wrappers.",
+                              status: "Locked",
+                              skillsLearned: ["Vite Core", "Tailwind CSS", "Hook States", "JSON REST Fetch"]
+                            },
+                            {
+                              id: "ms3",
+                              stepNumber: 3,
+                              title: "Backend Servers & Express Routing",
+                              description: "Construct custom REST controllers using modular NodeJS servers, load middlewares, and secure access channels.",
+                              status: "Locked",
+                              skillsLearned: ["Express Framework", "Node Core", "API Proxies", "JWT Auth tokens"]
+                            },
+                            {
+                              id: "ms4",
+                              stepNumber: 4,
+                              title: "Databases & ORM Schemas",
+                              description: "Build relational database models, write queries, seed records, and synchronize SQL layouts.",
+                              status: "Locked",
+                              skillsLearned: ["SQL queries", "Drizzle Schema", "Join relations", "Indices indexing"]
+                            }
+                          ]);
+                          setTasks([
+                            { id: "tsk-starter-1", title: "Complete your first lesson to earn study XP", type: "Quiz", status: "Pending", xpReward: 100, dueDate: "Today" },
+                            { id: "tsk-starter-2", title: "Introduce yourself in the Collaborate Forums", type: "Notes", status: "Pending", xpReward: 100, dueDate: "Today" },
+                            { id: "tsk-starter-3", title: "Ask the AI Tutor to explain complex topics", type: "Problem Set", status: "Pending", xpReward: 100, dueDate: "Today" }
+                          ]);
+                          alert("Curriculum reset successful! You are now at Level 1, 0 XP, 0 completed units.");
+                        }
+                      }}
+                      className="w-full text-center py-2 bg-slate-950/40 hover:bg-slate-950 text-slate-500 hover:text-slate-400 rounded-xl text-[10px] font-bold transition-all cursor-pointer"
+                    >
+                      Instant Hard Reset to Level 1
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
